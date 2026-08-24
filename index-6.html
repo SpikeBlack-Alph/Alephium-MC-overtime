@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Alephium Market Cap Ranking</title>
+<meta name="color-scheme" content="dark light">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* ============ tokens ============ */
+  [data-theme="dark"]{
+    --bg:#070E17; --surface:#0C1826; --surface-2:#111F30; --surface-3:#16273A;
+    --line:#1B2E42; --line-2:#253D55;
+    --ink:#E8F0F6; --ink-2:#AFC4D4; --muted:#6E8AA1;
+    --cyan:#4FC3D9; --mint:#5FD6A8; --amber:#EFA141; --gold:#F5D06B; --red:#FF7A5C;
+    --grid:rgba(110,138,161,.14);
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -12px rgba(0,0,0,.6);
+    --tip-bg:rgba(12,24,38,.96);
+  }
+  [data-theme="light"]{
+    --bg:#F4F7FA; --surface:#FFFFFF; --surface-2:#F7FAFC; --surface-3:#EEF3F8;
+    --line:#DFE7EE; --line-2:#C9D6E1;
+    --ink:#0D1B27; --ink-2:#3C556B; --muted:#647B90;
+    --cyan:#0E7F97; --mint:#0F8A66; --amber:#B0700C; --gold:#8A6A08; --red:#C7452A;
+    --grid:rgba(100,123,144,.16);
+    --shadow:0 1px 2px rgba(16,32,48,.05), 0 10px 28px -16px rgba(16,32,48,.28);
+    --tip-bg:rgba(255,255,255,.97);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+    font-size:16px; line-height:1.5; -webkit-font-smoothing:antialiased;
+    transition:background .2s ease,color .2s ease;
+  }
+  .wrap{max-width:1240px;margin:0 auto;padding:0 16px 56px}
+  @media (min-width:900px){ .wrap{padding:0 32px 80px} }
+
+  /* ============ top bar ============ */
+  .topbar{
+    position:sticky;top:0;z-index:20;
+    background:color-mix(in srgb,var(--bg) 88%,transparent);
+    backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+    border-bottom:1px solid var(--line);
+    margin:0 -16px 26px;padding:12px 16px;
+  }
+  @media (min-width:900px){ .topbar{margin:0 -32px 34px;padding:14px 32px} }
+  .topbar-in{max-width:1240px;margin:0 auto;display:flex;align-items:center;gap:8px}
+  @media (min-width:700px){ .topbar-in{gap:12px} }
+  .mark{
+    font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:12px;letter-spacing:.18em;
+    border:1px solid var(--line-2);border-radius:6px;padding:5px 8px;color:var(--cyan);flex:none;
+  }
+  .spacer{flex:1}
+
+  .stat.flash{animation:flash 1.8s ease-out 2}
+  @keyframes flash{0%,100%{background:var(--surface)}50%{background:color-mix(in srgb,var(--gold) 18%,var(--surface))}}
+
+  .pill{
+    display:inline-flex;align-items:center;gap:7px;flex:none;
+    font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--muted);
+    border:1px solid var(--line);border-radius:999px;padding:5px 11px;background:var(--surface);
+    white-space:nowrap;
+  }
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--muted);flex:none}
+  .pill[data-state="live"] .dot{background:var(--mint);animation:ping 2.4s ease-out infinite}
+  .pill[data-state="loading"] .dot{background:var(--amber)}
+  .pill[data-state="error"] .dot{background:var(--red)}
+  @keyframes ping{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--mint) 55%,transparent)}70%{box-shadow:0 0 0 7px transparent}100%{box-shadow:0 0 0 0 transparent}}
+  @media (prefers-reduced-motion:reduce){ .dot{animation:none!important} .stat.flash{animation:none} }
+  @media (max-width:700px){ .pill .txt{display:none} .pill{padding:6px 8px} }
+
+  .iconbtn{
+    appearance:none;background:var(--surface);border:1px solid var(--line);color:var(--muted);
+    width:34px;height:34px;border-radius:9px;display:grid;place-items:center;cursor:pointer;flex:none;
+    transition:color .15s ease,border-color .15s ease;
+  }
+  .iconbtn:hover{color:var(--ink);border-color:var(--line-2)}
+  .iconbtn svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+  .seg{display:flex;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:3px;flex:none}
+  .seg button{
+    appearance:none;border:0;background:transparent;color:var(--muted);cursor:pointer;
+    font-family:"IBM Plex Mono",monospace;font-size:11.5px;padding:5px 10px;border-radius:999px;
+    white-space:nowrap;transition:background .15s ease,color .15s ease;
+  }
+  .seg button:hover{color:var(--ink)}
+  .seg button[aria-pressed="true"]{background:var(--cyan);color:var(--bg);font-weight:600}
+  .seg.lang button{padding:5px 8px;font-size:11px;letter-spacing:.06em}
+  :where(button,summary,[tabindex]):focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+
+  h1{
+    font-family:"Bricolage Grotesque",sans-serif;font-weight:800;
+    font-size:clamp(1.7rem,5.2vw,2.6rem);line-height:1.04;letter-spacing:-.035em;margin:0 0 22px;
+  }
+  h1 em{font-style:normal;color:var(--cyan)}
+
+  /* ============ stats ============ */
+  .stats{
+    display:grid;grid-template-columns:repeat(2,1fr);gap:1px;
+    background:var(--line);border:1px solid var(--line);border-radius:14px;
+    overflow:hidden;margin-bottom:20px;box-shadow:var(--shadow);
+  }
+  @media (min-width:820px){ .stats{grid-template-columns:repeat(4,1fr)} }
+  .stat{background:var(--surface);padding:15px 15px 14px;display:flex;flex-direction:column;gap:5px;min-width:0}
+  @media (min-width:900px){ .stat{padding:19px 22px 17px} }
+  .stat .lab{
+    font-family:"IBM Plex Mono",monospace;font-size:9.5px;letter-spacing:.16em;
+    text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:6px;
+  }
+  .stat .lab i{width:5px;height:5px;border-radius:50%;background:var(--mint);font-style:normal;flex:none}
+  .stat .val{
+    font-family:"Bricolage Grotesque",sans-serif;font-weight:800;letter-spacing:-.035em;
+    font-size:clamp(1.45rem,5.2vw,2rem);line-height:1.05;
+    font-variant-numeric:tabular-nums;overflow-wrap:anywhere;
+  }
+  .stat .val .paren{font-size:.46em;font-weight:600;color:var(--muted);letter-spacing:0;white-space:nowrap}
+  .stat .val small{font-size:.5em;font-weight:600;color:var(--muted);margin-right:1px;letter-spacing:0}
+  .stat .sub{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .stat.pos .val{color:var(--mint)} .stat.neg .val{color:var(--red)} .stat.gold .val{color:var(--gold)}
+  .skel{display:inline-block;width:3.2em;height:.72em;border-radius:4px;background:var(--surface-3);animation:pulse 1.4s ease-in-out infinite}
+  @keyframes pulse{50%{opacity:.45}}
+
+  /* ============ chart panel ============ */
+  .panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);overflow:hidden}
+  .panel-head{
+    display:flex;justify-content:flex-end;align-items:center;gap:10px;flex-wrap:wrap;
+    padding:11px 15px;border-bottom:1px solid var(--line);background:var(--surface-2);
+  }
+  @media (min-width:900px){ .panel-head{padding:12px 22px} }
+  .tools{display:flex;gap:8px;align-items:center;overflow-x:auto;scrollbar-width:none;padding:2px}
+  .tools::-webkit-scrollbar{display:none}
+  .tools .seg{background:var(--surface)}
+  .zoomout{
+    appearance:none;display:none;align-items:center;gap:6px;cursor:pointer;
+    background:var(--surface);border:1px solid var(--line);color:var(--muted);
+    border-radius:999px;padding:5px 11px;font-family:"IBM Plex Mono",monospace;font-size:11.5px;
+  }
+  .zoomout.on{display:inline-flex}
+  .zoomout:hover{color:var(--ink);border-color:var(--line-2)}
+
+  .chart-box{position:relative;padding:12px 6px 8px;touch-action:none;cursor:grab}
+  .chart-box.dragging{cursor:grabbing}
+  @media (min-width:900px){ .chart-box{padding:18px 16px 10px} }
+  svg{display:block;width:100%;height:auto}
+  .axis text{font-family:"IBM Plex Mono",monospace;font-size:10.5px;fill:var(--muted)}
+  .flag-label{font-family:"IBM Plex Mono",monospace;font-size:10.5px;fill:var(--amber);letter-spacing:.04em}
+  .flag-hit{cursor:pointer}
+
+  .tip{
+    position:absolute;pointer-events:none;opacity:0;transform:translate(-50%,-118%);
+    background:var(--tip-bg);border:1px solid var(--line-2);border-radius:9px;
+    padding:8px 11px;box-shadow:var(--shadow);white-space:nowrap;transition:opacity .12s ease;z-index:5;
+  }
+  .tip.on{opacity:1}
+  .tip .t1{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+  .tip .t2{font-family:"Bricolage Grotesque",sans-serif;font-weight:800;font-size:19px;letter-spacing:-.02em;line-height:1.2}
+  .tip .t2 small{font-size:12px;color:var(--muted);font-weight:600}
+  .tip .t3{font-family:"IBM Plex Mono",monospace;font-size:10.5px;color:var(--amber);margin-top:2px}
+
+  .legend{
+    display:flex;gap:14px;flex-wrap:wrap;align-items:center;padding:0 15px 14px;
+    font-family:"IBM Plex Mono",monospace;font-size:10.5px;color:var(--muted);
+  }
+  @media (min-width:900px){ .legend{padding:0 22px 16px} }
+  .legend span{display:inline-flex;align-items:center;gap:6px}
+  .legend .hint{margin-left:auto;opacity:.75}
+  .sw{width:14px;height:2px;border-radius:2px;background:var(--cyan);flex:none}
+  .sw.dot-m{width:8px;height:8px;border-radius:50%;background:var(--mint)}
+  .sw.dot-a{width:8px;height:8px;border-radius:50%;background:none;border:1.6px solid var(--amber)}
+
+  /* ============ milestones ============ */
+  h2{font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);font-weight:500;margin:34px 0 12px}
+  .cards{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+  @media (min-width:760px){ .cards{grid-template-columns:repeat(2,1fr)} }
+  @media (min-width:1120px){ .cards{grid-template-columns:repeat(3,1fr)} }
+  .cards li{display:flex}
+  .cards button{
+    width:100%;text-align:left;font:inherit;color:inherit;cursor:pointer;
+    background:var(--surface);border:1px solid var(--line);border-radius:12px;
+    padding:14px 15px;display:flex;flex-direction:column;gap:8px;
+    transition:border-color .15s ease,background .15s ease;
+  }
+  .cards button:hover{border-color:var(--line-2);background:var(--surface-2)}
+  .cards button[aria-expanded="true"]{border-color:var(--amber);background:var(--surface-2)}
+  .cards .meta{display:flex;justify-content:space-between;align-items:center;gap:10px}
+  .tagc{
+    font-family:"IBM Plex Mono",monospace;font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;
+    color:var(--amber);border:1px solid color-mix(in srgb,var(--amber) 40%,transparent);
+    border-radius:5px;padding:2px 6px;
+  }
+  .cards .date{font-family:"IBM Plex Mono",monospace;font-size:10.5px;color:var(--muted)}
+  .cards h3{font-weight:600;font-size:15px;margin:0;letter-spacing:-.01em}
+  .cards p{margin:0;font-size:13.5px;color:var(--ink-2);line-height:1.5}
+  .clip{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .delta{
+    display:flex;gap:14px;flex-wrap:wrap;margin-top:2px;padding-top:11px;border-top:1px solid var(--line);
+    font-family:"IBM Plex Mono",monospace;font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);
+  }
+  .delta b{display:block;margin-top:3px;font-size:14.5px;letter-spacing:-.01em;text-transform:none;color:var(--ink);font-weight:600}
+  .delta .up{color:var(--mint)} .delta .down{color:var(--red)}
+
+  footer{margin-top:34px;padding-top:16px;border-top:1px solid var(--line);font-size:11.5px;color:var(--muted);line-height:1.65}
+  footer b{color:var(--ink-2);font-weight:500}
+  .sig{
+    margin:18px 0 0;text-align:center;
+    font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--muted);opacity:.75;
+  }
+  .sig span{color:var(--cyan);font-weight:600}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-in">
+    <span class="mark">ALPH</span>
+    <span class="spacer"></span>
+    <span class="pill" id="pill" data-state="loading">
+      <span class="dot"></span><span class="txt" id="pillTxt">—</span>
+    </span>
+    <button class="iconbtn" id="themeBtn" type="button" aria-label="Toggle theme"><svg viewBox="0 0 24 24" id="themeIcon"></svg></button>
+    <span class="seg lang" id="segLang" role="group" aria-label="Language">
+      <button type="button" data-l="en" aria-pressed="true">EN</button>
+      <button type="button" data-l="fr" aria-pressed="false">FR</button>
+      <button type="button" data-l="de" aria-pressed="false">DE</button>
+    </span>
+  </div>
+</div>
+
+<div class="wrap">
+  <h1>Alephium <em>Market Cap Ranking</em></h1>
+
+  <div class="stats" id="stats"></div>
+
+  <section class="panel">
+    <div class="panel-head">
+      <div class="tools">
+        <button class="zoomout" id="zoomOut" type="button"></button>
+        <span class="seg" id="segPeriod" role="group">
+          <button type="button" data-p="all" aria-pressed="true"></button>
+          <button type="button" data-p="2y" aria-pressed="false"></button>
+          <button type="button" data-p="1y" aria-pressed="false"></button>
+        </span>
+        <span class="seg" id="segScale" role="group">
+          <button type="button" data-e="lin" aria-pressed="true"></button>
+          <button type="button" data-e="log" aria-pressed="false"></button>
+        </span>
+      </div>
+    </div>
+    <div class="chart-box" id="chartBox">
+      <svg id="chart" role="img" aria-label="Alephium market cap ranking"></svg>
+      <div class="tip" id="tip"><div class="t1" id="tipD"></div><div class="t2" id="tipR"></div><div class="t3" id="tipC"></div></div>
+    </div>
+    <div class="legend" id="legend"></div>
+  </section>
+
+  <h2 id="h2"></h2>
+  <ul class="cards" id="cards"></ul>
+
+  <footer id="foot"></footer>
+  <p class="sig">vibecoded by <span>SpikeBlack</span></p>
+</div>
+
+<script>
+(() => {
+  "use strict";
+
+  /* ==================================================================
+     CONFIG — point these at your own backend once deployed.
+     historyUrl : [{"d":"2026-08-24","rank":1250}, ...]
+     liveUrl    : {"rank":…,"price":…,"marketCap":…,"change24h":…,"ts":…}
+     Empty -> public CoinPaprika endpoint (no key, CORS-enabled).
+     ================================================================== */
+  const CONFIG = {
+    historyUrl : "",
+    liveUrl    : "",
+    fallback   : "https://api.coinpaprika.com/v1/tickers/alph-alephium",
+    refreshMs  : 60000,
+    staleMs    : 5 * 60000
+  };
+
+  // Highest market cap ALPH has reached, used until the live feed reports higher.
+  const MCATH_SEED = { cap: 279e6, t: Date.parse("2024-02-27T00:00:00Z") };
+  // Market cap at the best rank ever reached, until /history supplies real mcap rows.
+  const MC_AT_BEST = 279e6;
+
+  const SEED = [
+    ["2021-12-01",1150],["2022-01-01",1080],["2022-02-01",1040],["2022-03-01",980],
+    ["2022-04-01",940],["2022-05-01",1010],["2022-06-01",1090],["2022-07-01",1060],
+    ["2022-08-01",1020],["2022-09-01",990],["2022-10-01",960],["2022-11-01",1005],
+    ["2022-12-01",970],["2023-01-01",900],["2023-02-01",860],["2023-03-01",810],
+    ["2023-04-01",790],["2023-05-01",770],["2023-06-01",800],["2023-07-01",780],
+    ["2023-08-01",810],["2023-09-01",790],["2023-10-01",730],["2023-11-01",640],
+    ["2023-12-01",520],["2024-01-01",430],["2024-02-01",265],["2024-03-01",208],
+    ["2024-04-01",240],["2024-05-01",260],["2024-06-01",250],["2024-07-01",285],
+    ["2024-08-01",320],["2024-09-01",330],["2024-10-01",310],["2024-11-01",270],
+    ["2024-12-01",255],["2025-01-01",285],["2025-02-01",340],["2025-03-01",390],
+    ["2025-04-01",430],["2025-05-01",400],["2025-06-01",385],["2025-07-01",355],
+    ["2025-08-01",375],["2025-09-01",400],["2025-10-01",430],["2025-11-01",520],
+    ["2025-12-01",590],["2026-01-01",640],["2026-02-01",610],["2026-03-01",575],
+    ["2026-04-01",700],["2026-05-01",830],["2026-06-01",950],["2026-07-01",1120],
+    ["2026-08-01",1250]
+  ];
+
+  const MILESTONES = [
+    {d:"2021-11-08", tag:"Mainnet",
+     t:{en:"Mainnet launch", fr:"Lancement du mainnet", de:"Mainnet-Start"},
+     p:{en:"The network went live on 8 November 2021 and has not stopped since. ALPH appeared on CoinMarketCap shortly after.",
+        fr:"Le réseau démarre le 8 novembre 2021 et n'a pas connu d'arrêt depuis. ALPH apparaît sur CoinMarketCap dans la foulée.",
+        de:"Das Netzwerk startete am 8. November 2021 und läuft seitdem ohne Unterbrechung. ALPH erschien kurz darauf auf CoinMarketCap."}},
+    {d:"2021-12-09", tag:"Upgrade 1",
+     t:{en:"First network upgrade", fr:"Première mise à jour réseau", de:"Erstes Netzwerk-Upgrade"},
+     p:{en:"One month after genesis, the first protocol upgrade shipped on mainnet.",
+        fr:"Un mois après le genesis, la première mise à jour de protocole passe sur le réseau principal.",
+        de:"Einen Monat nach dem Genesis-Block ging das erste Protokoll-Upgrade auf dem Mainnet live."}},
+    {d:"2022-04-30", tag:"Upgrade 2",
+     t:{en:"Second network upgrade", fr:"Deuxième mise à jour réseau", de:"Zweites Netzwerk-Upgrade"},
+     p:{en:"Node and protocol hardening, in the middle of the bear market.",
+        fr:"Consolidation du nœud et du protocole, en plein marché baissier.",
+        de:"Härtung von Node und Protokoll, mitten im Bärenmarkt."}},
+    {d:"2023-03-15", tag:"Leman",
+     t:{en:"Leman — the developer stack", fr:"Leman — la stack développeur", de:"Leman — der Entwickler-Stack"},
+     p:{en:"First major post-mainnet upgrade: richer smart contracts, a stronger VM, better APIs, and activation of the fee burn mechanism. This is what made the dApp ecosystem possible.",
+        fr:"Première grande mise à jour post-mainnet : contrats intelligents plus complets, VM renforcée, meilleures API, et activation du burn des frais. C'est ce qui rend l'écosystème dApp possible.",
+        de:"Erstes großes Upgrade nach dem Mainnet-Start: umfangreichere Smart Contracts, stärkere VM, bessere APIs und Aktivierung des Fee-Burn-Mechanismus. Damit wurde das dApp-Ökosystem möglich."}},
+    {d:"2024-02-27", tag:"ATH",
+     t:{en:"All-time high — $3.85", fr:"Sommet historique — 3,85 $", de:"Allzeithoch — 3,85 $"},
+     p:{en:"On 27 February 2024 ALPH hit its all-time high, at a market cap of roughly $279M — the best rank the project has ever reached.",
+        fr:"Le 27 février 2024, ALPH touche son plus haut historique, pour une capitalisation d'environ 279 M$. C'est le meilleur rang jamais atteint par le projet.",
+        de:"Am 27. Februar 2024 erreichte ALPH sein Allzeithoch bei einer Marktkapitalisierung von rund 279 Mio. $ — der beste Rang der Projektgeschichte."}},
+    {d:"2024-06-12", tag:"Rhône",
+     t:{en:"Rhône — 64s → 16s", fr:"Rhône — 64 s → 16 s", de:"Rhône — 64 s → 16 s"},
+     p:{en:"Block time cut by four, more capable contracts and snappier dApps. The network's first real performance jump.",
+        fr:"Le temps de bloc est divisé par quatre, les contrats gagnent en puissance et les dApps en réactivité. Premier vrai saut de performance du réseau.",
+        de:"Die Blockzeit wurde geviertelt, Contracts wurden leistungsfähiger und dApps reaktionsschneller. Der erste echte Performance-Sprung des Netzwerks."}},
+    {d:"2025-07-15", tag:"Danube",
+     t:{en:"Danube — 16s → 8s, invisible sharding", fr:"Danube — 16 s → 8 s, sharding invisible", de:"Danube — 16 s → 8 s, unsichtbares Sharding"},
+     p:{en:"8-second blocks, groupless addresses that hide sharding from the user, chained transactions, sync V2, and the supply cap replaced by a tail emission. The project's largest upgrade to date.",
+        fr:"Blocs de 8 secondes, adresses « groupless » qui effacent le sharding pour l'utilisateur, transactions chaînées, sync V2, et fin du plafond d'offre au profit d'une émission résiduelle. La plus grosse mise à jour du projet à ce jour.",
+        de:"8-Sekunden-Blöcke, gruppenlose Adressen, die das Sharding verbergen, verkettete Transaktionen, Sync V2 und der Wegfall der Angebotsobergrenze zugunsten einer Tail-Emission. Das bislang größte Upgrade des Projekts."}}
+  ];
+
+  /* ============================ i18n ============================ */
+  const T = {
+    en:{ mo:["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],
+      date:(d,m,y)=>`${m} ${d}, ${y}`,
+      sRank:"Current rank", sPrice:"Price", sBest:"Best rank ever", sMcAth:"Market-cap ATH",
+      sPlaces:"places", sCap:"mkt cap",
+      pAll:"All", p2y:"2Y", p1y:"1Y", lin:"Linear", log:"Log", reset:"Reset zoom",
+      lgLine:"CMC rank", lgBest:"Best rank", lgMile:"Network upgrade", lgAth:"Market-cap all-time high",
+      hint:"scroll or pinch to zoom · drag to pan once zoomed · double-tap to reset",
+      live:t=>`Live · ${t}`, loading:"Connecting…", offline:"Stored data", stale:t=>`Stale · ${t}`,
+      ago:s=>s<60?`${s}s ago`:s<3600?`${Math.floor(s/60)}m ago`:`${Math.floor(s/3600)}h ago`,
+      dBefore:"90d before", dDay:"On the day", dAfter:"90d after", dEffect:"90d effect",
+      h2:"Project milestones",
+      foot:src=>`Live figures from <b>${src}</b>, refreshed every 60s; the market-cap all-time high in the header updates automatically if the live cap exceeds it. Historical rank line reconstructed from ALPH market-cap history and anchored on verified points; individual months are approximate. Upgrade dates from Alephium documentation and announcements.`
+    },
+    fr:{ mo:["janv.","févr.","mars","avr.","mai","juin","juil.","août","sept.","oct.","nov.","déc."],
+      date:(d,m,y)=>`${d} ${m} ${y}`,
+      sRank:"Rang actuel", sPrice:"Prix", sBest:"Meilleur rang", sMcAth:"Sommet de capi",
+      sPlaces:"places", sCap:"capi",
+      pAll:"Tout", p2y:"2 ans", p1y:"1 an", lin:"Linéaire", log:"Log", reset:"Réinit. zoom",
+      lgLine:"Rang CMC", lgBest:"Meilleur rang", lgMile:"Mise à jour réseau", lgAth:"Sommet de capitalisation",
+      hint:"molette ou pincement pour zoomer · glisser pour naviguer une fois zoomé · double-tap pour réinitialiser",
+      live:t=>`En direct · ${t}`, loading:"Connexion…", offline:"Données stockées", stale:t=>`Périmé · ${t}`,
+      ago:s=>s<60?`il y a ${s} s`:s<3600?`il y a ${Math.floor(s/60)} min`:`il y a ${Math.floor(s/3600)} h`,
+      dBefore:"90 j avant", dDay:"Le jour J", dAfter:"90 j après", dEffect:"Effet 90 j",
+      h2:"Jalons du projet",
+      foot:src=>`Valeurs en direct via <b>${src}</b>, rafraîchies toutes les 60 s ; le sommet de capitalisation affiché en en-tête se met à jour automatiquement si la capi en direct le dépasse. Courbe de rang historique reconstruite à partir de l'historique de capitalisation d'ALPH ; les valeurs mensuelles sont approximatives. Dates des mises à jour issues de la documentation et des annonces Alephium.`
+    },
+    de:{ mo:["Jan.","Feb.","März","Apr.","Mai","Juni","Juli","Aug.","Sept.","Okt.","Nov.","Dez."],
+      date:(d,m,y)=>`${d}. ${m} ${y}`,
+      sRank:"Aktueller Rang", sPrice:"Preis", sBest:"Bester Rang", sMcAth:"Marktkap.-Hoch",
+      sPlaces:"Plätze", sCap:"Marktkap.",
+      pAll:"Alle", p2y:"2 J.", p1y:"1 J.", lin:"Linear", log:"Log", reset:"Zoom zurücksetzen",
+      lgLine:"CMC-Rang", lgBest:"Bester Rang", lgMile:"Netzwerk-Upgrade", lgAth:"Marktkapitalisierungs-Allzeithoch",
+      hint:"Scrollen oder Pinch zum Zoomen · Ziehen zum Verschieben im Zoom · Doppeltippen zum Zurücksetzen",
+      live:t=>`Live · ${t}`, loading:"Verbinden…", offline:"Gespeicherte Daten", stale:t=>`Veraltet · ${t}`,
+      ago:s=>s<60?`vor ${s} s`:s<3600?`vor ${Math.floor(s/60)} Min.`:`vor ${Math.floor(s/3600)} Std.`,
+      dBefore:"90 T davor", dDay:"Am Tag", dAfter:"90 T danach", dEffect:"90-Tage-Effekt",
+      h2:"Meilensteine des Projekts",
+      foot:src=>`Live-Werte über <b>${src}</b>, alle 60 s aktualisiert; das Marktkapitalisierungs-Allzeithoch in der Kopfzeile wird automatisch angepasst, sobald die Live-Marktkapitalisierung es übertrifft. Historische Rangkurve rekonstruiert aus der Marktkapitalisierungs-Historie von ALPH; einzelne Monatswerte sind Näherungen. Upgrade-Daten aus Alephium-Dokumentation und -Ankündigungen.`
+    }
+  };
+
+  /* ============================ state =========================== */
+  const $ = s => document.querySelector(s);
+  const NS = "http://www.w3.org/2000/svg";
+  const svg = $("#chart");
+  const DAY = 864e5;
+  const ms = s => new Date(s + "T00:00:00Z").getTime();
+  const store = {
+    get(k, d){ try { return localStorage.getItem(k) ?? d; } catch { return d; } },
+    set(k, v){ try { localStorage.setItem(k, v); } catch {} }
+  };
+
+  let lang = store.get("alph.lang", "en");   // English by default
+  if (!T[lang]) lang = "en";
+  let theme = store.get("alph.theme", matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark");
+  let period = "all", scale = "lin", sel = null;
+  let view = null;                       // {t0,t1} zoom window, null = full period
+  let serie = SEED.map(([d, r]) => ({t: ms(d), r}));
+  let live = null, liveState = "loading", lastOk = 0, source = "CoinPaprika";
+  let geo = null, flashMcath = false;
+
+  let mcath = (() => {
+    try { const j = JSON.parse(store.get("alph.mcath", ""));
+          if (j && j.cap >= MCATH_SEED.cap) return {cap:+j.cap, t:+j.t}; } catch {}
+    return {...MCATH_SEED};
+  })();
+
+  const L = () => T[lang];
+  const locale = () => lang === "en" ? "en-US" : lang === "fr" ? "fr-FR" : "de-DE";
+  const fDate  = t => { const d = new Date(t); return L().date(d.getUTCDate(), L().mo[d.getUTCMonth()], d.getUTCFullYear()); };
+  const fMonth = t => { const d = new Date(t); return `${L().mo[d.getUTCMonth()]} ${d.getUTCFullYear()}`; };
+  const nf = (v, d = 2) => new Intl.NumberFormat(locale(), {minimumFractionDigits:d, maximumFractionDigits:d}).format(v);
+  const compact = v => new Intl.NumberFormat(locale(), {notation:"compact", maximumFractionDigits:2}).format(v);
+  const el = (n, a = {}) => { const e = document.createElementNS(NS, n); for (const k in a) e.setAttribute(k, a[k]); return e; };
+  const C = k => getComputedStyle(document.documentElement).getPropertyValue(k).trim();
+
+  /* ========================== data layer ======================== */
+  function normalise(json){
+    if (json && json.quotes && json.quotes.USD){                 // CoinPaprika
+      const q = json.quotes.USD;
+      return {rank:json.rank, price:q.price, marketCap:q.market_cap, change24h:q.percent_change_24h,
+              ts:Date.now()};
+    }
+    if (json && typeof json.rank === "number"){                  // own backend
+      return {rank:json.rank, price:json.price, marketCap:json.marketCap, change24h:json.change24h,
+              ts:json.ts ? Date.parse(json.ts) : Date.now()};
+    }
+    throw new Error("unrecognised payload");
+  }
+
+  // Keeps the market-cap high honest: raises it whenever the live cap exceeds it.
+  function reconcileATH(){
+    if (!live || !live.marketCap || live.marketCap <= mcath.cap) return false;
+    mcath = {cap: live.marketCap, t: Date.now()};
+    store.set("alph.mcath", JSON.stringify(mcath));
+    flashMcath = true;
+    return true;
+  }
+
+  async function pullLive(){
+    const url = CONFIG.liveUrl || CONFIG.fallback;
+    source = CONFIG.liveUrl ? "CoinMarketCap" : "CoinPaprika";
+    try {
+      const ctrl = new AbortController();
+      const to = setTimeout(() => ctrl.abort(), 8000);
+      const res = await fetch(url, {signal: ctrl.signal, headers:{accept:"application/json"}});
+      clearTimeout(to);
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      live = normalise(await res.json());
+      lastOk = Date.now();
+      liveState = "live";
+      reconcileATH();
+      mergeLivePoint();
+    } catch {
+      liveState = live ? "stale" : "error";
+    }
+    stats(); pill(); foot(); draw();
+  }
+
+  async function pullHistory(){
+    if (!CONFIG.historyUrl) return;
+    try {
+      const res = await fetch(CONFIG.historyUrl, {headers:{accept:"application/json"}});
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      const rows = await res.json();
+      const pts = rows.map(r => ({t: ms(String(r.d || r.date).slice(0,10)), r: Number(r.rank), mc: r.mcap ? Number(r.mcap) : undefined}))
+                      .filter(p => !isNaN(p.t) && p.r >= 1).sort((a,b) => a.t - b.t);
+      if (pts.length > 1){ serie = pts; mergeLivePoint(); view = null; stats(); cards(); draw(); }
+    } catch { /* keep the seed */ }
+  }
+
+  function mergeLivePoint(){
+    if (!live || !live.rank) return;
+    const now = Date.now(), tail = serie[serie.length-1];
+    if (tail && now - tail.t < 20 * DAY) serie = serie.slice(0, -1);
+    serie.push({t: now, r: live.rank, live: true});
+  }
+
+  const last = () => serie[serie.length-1];
+  const best = () => serie.reduce((a,b) => b.r < a.r ? b : a);
+  const fullDomain = () => [Math.min(serie[0].t, ms(MILESTONES[0].d)), last().t];
+
+  function rankAt(t){
+    const s = serie;
+    if (t <= s[0].t) return s[0].r;
+    if (t >= s[s.length-1].t) return s[s.length-1].r;
+    for (let i = 1; i < s.length; i++)
+      if (s[i].t >= t){ const a = s[i-1], b = s[i]; return a.r + (b.r - a.r) * ((t - a.t) / (b.t - a.t)); }
+    return null;
+  }
+
+  /* ============================ chrome ========================== */
+  const SUN = '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4"/>';
+  const MOON = '<path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z"/>';
+
+  function applyTheme(){
+    document.documentElement.setAttribute("data-theme", theme);
+    $("#themeIcon").innerHTML = theme === "dark" ? SUN : MOON;
+    store.set("alph.theme", theme);
+    requestAnimationFrame(draw);
+  }
+
+  function pill(){
+    const l = L(), p = $("#pill");
+    const secs = Math.max(0, Math.round((Date.now() - lastOk) / 1000));
+    const state = liveState === "live" && Date.now() - lastOk > CONFIG.staleMs ? "stale" : liveState;
+    p.dataset.state = state === "live" ? "live" : state === "error" ? "error" : "loading";
+    $("#pillTxt").textContent =
+      state === "live"  ? l.live(l.ago(secs)) :
+      state === "stale" ? l.stale(l.ago(secs)) :
+      state === "loading" ? l.loading : l.offline;
+    p.title = source;
+  }
+
+
+  function stats(){
+    const l = L(), lt = last(), b = best();
+    const sk = '<span class="skel"></span>';
+    const cells = [
+      {lab:`<i></i>${l.sRank}`, val: live ? `<small>#</small>${live.rank}` : sk, sub: live ? source : "—"},
+      {lab:`<i></i>${l.sPrice}`, val: live ? `<small>$</small>${nf(live.price, live.price < 1 ? 4 : 2)}` : sk,
+       sub: live ? `${l.sCap} $${compact(live.marketCap)} · 24h ${live.change24h >= 0 ? "+" : ""}${nf(live.change24h, 2)}%` : "—",
+       cls: live ? (live.change24h >= 0 ? "pos" : "neg") : ""},
+      {lab:l.sBest,
+       val:`<small>#</small>${Math.round(b.r)} <span class="paren">(≈ $${compact(b.mc || MC_AT_BEST)})</span>`,
+       sub:fMonth(b.t), cls:"pos"},
+      {lab:l.sMcAth, val:`<small>$</small>${compact(mcath.cap)}`, sub:fMonth(mcath.t),
+       cls:`gold${flashMcath ? " flash" : ""}`}
+    ];
+    $("#stats").innerHTML = cells.map(c =>
+      `<div class="stat ${c.cls || ""}"><span class="lab">${c.lab}</span><span class="val">${c.val}</span><span class="sub">${c.sub}</span></div>`).join("");
+    flashMcath = false;
+  }
+
+  function foot(){ $("#foot").innerHTML = L().foot(source); }
+
+  function legend(){
+    const l = L();
+    $("#legend").innerHTML =
+      `<span><i class="sw"></i>${l.lgLine}</span>
+       <span><i class="sw dot-m"></i>${l.lgBest}</span>
+       <span><i class="sw dot-a"></i>${l.lgMile}</span>
+       <span class="hint">${l.hint}</span>`;
+  }
+
+  /* ======================= domain & zoom ======================== */
+  const MIN_SPAN = 45 * DAY;
+
+  function baseDomain(){
+    const [fa, fz] = fullDomain();
+    if (period === "1y") return [Math.max(fa, fz - 365 * DAY), fz];
+    if (period === "2y") return [Math.max(fa, fz - 730 * DAY), fz];
+    return [fa, fz];
+  }
+  const timeDomain = () => view ? [view.t0, view.t1] : baseDomain();
+
+  function clampView(t0, t1){
+    const [fa, fz] = fullDomain();
+    let span = Math.max(MIN_SPAN, Math.min(fz - fa, t1 - t0));
+    if (t0 < fa){ t0 = fa; t1 = fa + span; }
+    if (t1 > fz){ t1 = fz; t0 = fz - span; }
+    return [Math.max(fa, t0), Math.min(fz, t1)];
+  }
+
+  function setView(t0, t1){
+    const [fa, fz] = fullDomain();
+    const [a, z] = clampView(t0, t1);
+    view = (z - a >= fz - fa - 1000) ? null : {t0:a, t1:z};
+    $("#zoomOut").classList.toggle("on", !!view);
+    draw();
+  }
+  function zoomAt(anchor, factor){
+    const [a, z] = timeDomain(), span = z - a;
+    const k = Math.min(1, Math.max(0, (anchor - a) / span));
+    const [fa, fz] = fullDomain();
+    const ns = Math.max(MIN_SPAN, Math.min(fz - fa, span * factor));
+    setView(anchor - k * ns, anchor - k * ns + ns);
+  }
+  function resetZoom(){ view = null; $("#zoomOut").classList.remove("on"); draw(); }
+
+  function rankTicks(lo, hi){
+    const steps = [5,10,25,50,100,150,200,250,500];
+    const p = steps.find(v => v >= (hi - lo) / 5) || 500;
+    const out = [];
+    for (let v = Math.ceil(lo / p) * p; v <= hi; v += p) out.push(v);
+    return out;
+  }
+
+  /* ============================= chart ========================== */
+  function draw(){
+    const w = $("#chartBox").clientWidth || 900;
+    const small = w < 640;
+    const h = small ? Math.min(430, Math.max(300, Math.round(w * .86)))
+                    : Math.max(400, Math.min(560, Math.round(w * .46)));
+    const m = {t: small ? 30 : 48, r: small ? 14 : 22, b: 30, l: small ? 44 : 58};
+    const pw = w - m.l - m.r, ph = h - m.t - m.b;
+    const col = {cyan:C("--cyan"), mint:C("--mint"), amber:C("--amber"), gold:C("--gold"),
+                 grid:C("--grid"), bg:C("--surface")};
+
+    svg.setAttribute("viewBox", `0 0 ${w} ${h}`);
+    svg.setAttribute("height", h);
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+
+    const [t0, t1] = timeDomain();
+    // include the two points straddling the window so the line reaches the edges
+    const inside = serie.filter(p => p.t >= t0 && p.t <= t1);
+    const before = serie.filter(p => p.t < t0).slice(-1);
+    const after  = serie.filter(p => p.t > t1).slice(0, 1);
+    const pts = [...before, ...inside, ...after];
+    if (pts.length < 2) return;
+
+    const vis = inside.length ? inside : pts;
+    let lo = Math.min(...vis.map(p => p.r)), hi = Math.max(...vis.map(p => p.r));
+    const pad = Math.max(15, (hi - lo) * .18);
+    lo = Math.max(1, Math.floor((lo - pad) / 10) * 10);
+    hi = Math.ceil((hi + pad) / 10) * 10;
+
+    const X = t => m.l + (t - t0) / (t1 - t0) * pw;
+    const tAt = px => t0 + (px - m.l) / pw * (t1 - t0);
+    const Y = scale === "log"
+      ? r => m.t + (Math.log10(Math.max(1, r)) - Math.log10(lo)) / (Math.log10(hi) - Math.log10(lo)) * ph
+      : r => m.t + (r - lo) / (hi - lo) * ph;
+
+    const defs = el("defs");
+    const clip = el("clipPath", {id:"plot"});
+    clip.appendChild(el("rect", {x:m.l, y:m.t, width:pw, height:ph}));
+    defs.appendChild(clip);
+    const lg = el("linearGradient", {id:"ln", x1:"0", y1:"0", x2:"1", y2:"0"});
+    lg.appendChild(el("stop", {offset:"0%", "stop-color":col.cyan}));
+    lg.appendChild(el("stop", {offset:"100%", "stop-color":col.mint}));
+    const ag = el("linearGradient", {id:"fill", x1:"0", y1:"0", x2:"0", y2:"1"});
+    ag.appendChild(el("stop", {offset:"0%", "stop-color":col.cyan, "stop-opacity":".20"}));
+    ag.appendChild(el("stop", {offset:"100%", "stop-color":col.cyan, "stop-opacity":"0"}));
+    defs.appendChild(lg); defs.appendChild(ag); svg.appendChild(defs);
+
+    const gy = el("g"), ax = el("g", {class:"axis"});
+    rankTicks(lo, hi).forEach(v => {
+      const y = Y(v);
+      gy.appendChild(el("line", {x1:m.l, x2:m.l+pw, y1:y, y2:y, stroke:col.grid, "stroke-width":1}));
+      const tx = el("text", {x:m.l-10, y:y+3.5, "text-anchor":"end"});
+      tx.textContent = "#" + v; ax.appendChild(tx);
+    });
+    svg.appendChild(gy); svg.appendChild(ax);
+
+    // time axis: years, or months when zoomed in far enough
+    const ax2 = el("g", {class:"axis"});
+    const span = t1 - t0;
+    const marks = [];
+    if (span < 400 * DAY){
+      const d = new Date(t0); d.setUTCDate(1); d.setUTCHours(0,0,0,0);
+      const stepM = span < 120 * DAY ? 1 : span < 260 * DAY ? 2 : 3;
+      while (d.getTime() <= t1){
+        if (d.getTime() >= t0) marks.push([d.getTime(), fMonth(d.getTime())]);
+        d.setUTCMonth(d.getUTCMonth() + stepM);
+      }
+    } else {
+      const yA = new Date(t0).getUTCFullYear(), yB = new Date(t1).getUTCFullYear();
+      const stepY = (yB - yA) > 6 ? 2 : 1;
+      for (let a = yA; a <= yB; a += stepY){
+        const t = ms(`${a}-01-01`);
+        if (t >= t0 && t <= t1) marks.push([t, String(a)]);
+      }
+    }
+    marks.forEach(([t, label]) => {
+      const x = X(t);
+      ax2.appendChild(el("line", {x1:x, x2:x, y1:m.t, y2:m.t+ph, stroke:col.grid, "stroke-width":1, "stroke-dasharray":"2 5"}));
+      const tx = el("text", {x:x, y:h-9, "text-anchor":"middle"});
+      tx.textContent = label; ax2.appendChild(tx);
+    });
+    svg.appendChild(ax2);
+
+    const gPlot = el("g", {"clip-path":"url(#plot)"});
+    const d = pts.map((p,i) => `${i ? "L" : "M"}${X(p.t).toFixed(1)},${Y(p.r).toFixed(1)}`).join(" ");
+    gPlot.appendChild(el("path", {d:`${d} L${X(pts[pts.length-1].t)},${m.t+ph} L${X(pts[0].t)},${m.t+ph} Z`, fill:"url(#fill)"}));
+    gPlot.appendChild(el("path", {d, fill:"none", stroke:"url(#ln)", "stroke-width": small ? 2.4 : 3,
+      "stroke-linejoin":"round", "stroke-linecap":"round"}));
+
+    const b = best();
+    if (b.t >= t0 && b.t <= t1){
+      gPlot.appendChild(el("circle", {cx:X(b.t), cy:Y(b.r), r:9, fill:"none", stroke:col.mint, "stroke-opacity":".3"}));
+      gPlot.appendChild(el("circle", {cx:X(b.t), cy:Y(b.r), r:4.5, fill:col.mint}));
+    }
+    const lt = last();
+    if (lt.live && lt.t >= t0 && lt.t <= t1)
+      gPlot.appendChild(el("circle", {cx:X(lt.t), cy:Y(lt.r), r:5.5, fill:col.bg, stroke:col.cyan, "stroke-width":2.5}));
+
+    svg.appendChild(gPlot);
+
+    // ---- milestones ----
+    const gm = el("g");
+    let tier = 0;
+    MILESTONES.forEach((j, i) => {
+      const t = ms(j.d);
+      if (t < t0 || t > t1) return;
+      const x = X(t), y = Y(rankAt(t)), on = sel === i;
+      const yl = m.t - (small ? 16 : (tier % 2 ? 34 : 16));
+      tier++;
+      gm.appendChild(el("line", {x1:x, x2:x, y1:yl+4, y2:y, stroke:col.amber,
+        "stroke-opacity": on ? .9 : .32, "stroke-width": on ? 1.5 : 1, "stroke-dasharray":"2 4"}));
+      gm.appendChild(el("circle", {cx:x, cy:y, r: on ? 5.5 : 3.6, fill:col.bg, stroke:col.amber, "stroke-width": on ? 2.2 : 1.6}));
+      if (!small){
+        const grp = el("g", {class:"flag-hit", tabindex:"0", role:"button"});
+        const bw = j.tag.length * 6.5 + 16;
+        grp.appendChild(el("rect", {x:x-bw/2, y:yl-12, width:bw, height:17, rx:8, fill:col.amber, "fill-opacity": on ? .18 : .07}));
+        const lab = el("text", {x:x, y:yl, "text-anchor":"middle", class:"flag-label"});
+        lab.textContent = j.tag; grp.appendChild(lab);
+        const ttl = el("title"); ttl.textContent = j.t[lang]; grp.appendChild(ttl);
+        grp.addEventListener("click", ev => { ev.stopPropagation(); pick(i); });
+        grp.addEventListener("keydown", ev => { if (ev.key === "Enter" || ev.key === " "){ ev.preventDefault(); pick(i); } });
+        gm.appendChild(grp);
+      }
+    });
+    svg.appendChild(gm);
+
+    // ---- crosshair only; all gestures are bound once on #chartBox ----
+    const cross = el("line", {id:"xhair", y1:m.t, y2:m.t+ph, stroke:col.cyan, "stroke-width":1, "stroke-opacity":".45", visibility:"hidden"});
+    const dot   = el("circle", {id:"xdot", r:5, fill:col.bg, stroke:col.cyan, "stroke-width":2.5, visibility:"hidden"});
+    svg.appendChild(cross); svg.appendChild(dot);
+
+    geo = {w, h, m, pw, ph, t0, t1, span, X, Y, tAt, small};
+  }
+
+  /* ==================== gestures — bound once ===================
+     The SVG is rebuilt on every redraw, so nothing inside draw() can
+     hold a pointer capture: it would be destroyed mid-gesture. All
+     listeners live on #chartBox, which survives, and read the current
+     geometry from `geo`.
+     ============================================================== */
+  function hideTip(){
+    const c = document.getElementById("xhair"), d = document.getElementById("xdot");
+    if (c) c.setAttribute("visibility", "hidden");
+    if (d) d.setAttribute("visibility", "hidden");
+    $("#tip").classList.remove("on");
+  }
+
+  function showTipAt(clientX){
+    if (!geo) return;
+    const c = document.getElementById("xhair"), d = document.getElementById("xdot");
+    if (!c || !d) return;
+    const bb = svg.getBoundingClientRect(), k = geo.w / bb.width;
+    const px = Math.min(geo.m.l + geo.pw, Math.max(geo.m.l, (clientX - bb.left) * k));
+    const t = geo.tAt(px), r = rankAt(t), x = geo.X(t), y = geo.Y(r);
+    c.setAttribute("x1", x); c.setAttribute("x2", x); c.setAttribute("visibility", "visible");
+    d.setAttribute("cx", x); d.setAttribute("cy", y); d.setAttribute("visibility", "visible");
+    $("#tipD").textContent = geo.span < 400 * DAY ? fDate(t) : fMonth(t);
+    $("#tipR").innerHTML = `<small>#</small>${Math.round(r)}`;
+    const near = MILESTONES.filter(j => Math.abs(ms(j.d) - t) < geo.span / 22).map(j => j.tag);
+    $("#tipC").textContent = near.length ? "↳ " + near.join(" · ") : "";
+    const bx = $("#chartBox").getBoundingClientRect(), tip = $("#tip");
+    tip.style.left = Math.min(Math.max(78, (bb.left - bx.left) + x / k), bx.width - 78) + "px";
+    tip.style.top  = ((bb.top - bx.top) + y / k) + "px";
+    tip.classList.add("on");
+  }
+
+  // Redraws are coalesced to one per animation frame so pinch stays smooth.
+  let pendingView = null, viewRaf = null;
+  function queueView(a, z){
+    pendingView = [a, z];
+    if (viewRaf) return;
+    viewRaf = requestAnimationFrame(() => {
+      viewRaf = null;
+      const v = pendingView; pendingView = null;
+      if (v) setView(v[0], v[1]);
+    });
+  }
+
+  function bindGestures(){
+    const box = $("#chartBox");
+    const pts = new Map();
+    let pan = null, pinch = null, moved = false, lastTap = 0, hideTimer = null;
+
+    const sx = clientX => { const bb = svg.getBoundingClientRect(); return (clientX - bb.left) * (geo.w / bb.width); };
+    const inPlot = clientY => {
+      const bb = svg.getBoundingClientRect();
+      const py = (clientY - bb.top) * (geo.h / bb.height);
+      return py >= geo.m.t - 14 && py <= geo.m.t + geo.ph + 14;
+    };
+    const clampX = px => Math.min(geo.m.l + geo.pw, Math.max(geo.m.l, px));
+    const midpoint = () => { const v = [...pts.values()]; return (v[0].x + v[1].x) / 2; };
+    const spread   = () => { const v = [...pts.values()]; return Math.max(1, Math.abs(v[0].x - v[1].x)); };
+
+    box.addEventListener("wheel", e => {
+      if (!geo || !inPlot(e.clientY)) return;
+      e.preventDefault();
+      zoomAt(geo.tAt(clampX(sx(e.clientX))), e.deltaY > 0 ? 1.15 : 1 / 1.15);
+    }, {passive:false});
+
+    box.addEventListener("pointerdown", e => {
+      if (!geo || e.target.closest(".flag-hit")) return;   // milestone flags keep their own taps
+      clearTimeout(hideTimer);
+      e.preventDefault();
+      try { box.setPointerCapture(e.pointerId); } catch {}
+      pts.set(e.pointerId, {x:e.clientX});
+
+      if (pts.size === 1){
+        moved = false;
+        pan = {x:e.clientX, t0:geo.t0, t1:geo.t1};
+        pinch = null;
+        box.classList.add("dragging");
+        const now = Date.now();
+        if (now - lastTap < 320){ lastTap = 0; resetZoom(); hideTip(); return; }
+        lastTap = now;
+        if (e.pointerType !== "mouse") showTipAt(e.clientX);
+      } else if (pts.size === 2){
+        pinch = {dist: spread(), mid: midpoint(), t0: geo.t0, t1: geo.t1};
+        pan = null;
+        hideTip();
+      }
+    });
+
+    box.addEventListener("pointermove", e => {
+      if (!geo) return;
+      if (pts.has(e.pointerId)) pts.set(e.pointerId, {x:e.clientX});
+
+      // two fingers -> zoom around the midpoint of the initial pinch
+      if (pinch && pts.size >= 2){
+        const base = pinch.t1 - pinch.t0;
+        const f = (clampX(sx(pinch.mid)) - geo.m.l) / geo.pw;
+        const anchor = pinch.t0 + f * base;
+        const [fa, fz] = fullDomain();
+        const ns = Math.max(MIN_SPAN, Math.min(fz - fa, base * (pinch.dist / spread())));
+        queueView(anchor - f * ns, anchor - f * ns + ns);
+        return;
+      }
+
+      // one finger / held mouse button -> pan once past a 4px threshold
+      if (pan && pts.has(e.pointerId)){
+        e.preventDefault();
+        const dx = (e.clientX - pan.x) * (geo.w / svg.getBoundingClientRect().width);
+        if (!moved && Math.abs(dx) > 4) moved = true;
+        if (moved){
+          const dt = -dx / geo.pw * (pan.t1 - pan.t0);
+          const [ca, cz] = clampView(pan.t0 + dt, pan.t1 + dt);
+          // fully zoomed out (or pushed against an edge): there is nothing to
+          // pan into, so the same drag scrubs the curve instead of dead-ending
+          if (Math.abs(ca - geo.t0) < 1000 && Math.abs(cz - geo.t1) < 1000){
+            showTipAt(e.clientX);
+            return;
+          }
+          hideTip();
+          queueView(ca, cz);
+          return;
+        }
+        if (e.pointerType !== "mouse") showTipAt(e.clientX);
+        return;
+      }
+
+      if (e.pointerType === "mouse" && pts.size === 0 && inPlot(e.clientY)) showTipAt(e.clientX);
+      else if (e.pointerType === "mouse" && pts.size === 0) hideTip();
+    });
+
+    const end = e => {
+      pts.delete(e.pointerId);
+      try { box.releasePointerCapture(e.pointerId); } catch {}
+      if (pts.size < 2) pinch = null;
+      if (pts.size === 1 && geo){
+        // second finger lifted: continue as a pan from where the first one is
+        const v = [...pts.values()][0];
+        pan = {x:v.x, t0:geo.t0, t1:geo.t1};
+        moved = true;
+      }
+      if (pts.size === 0){
+        pan = null; moved = false;
+        box.classList.remove("dragging");
+        if (e.pointerType !== "mouse") hideTimer = setTimeout(hideTip, 1500);
+      }
+    };
+    box.addEventListener("pointerup", end);
+    box.addEventListener("pointercancel", end);
+    box.addEventListener("pointerleave", e => {
+      if (e.pointerType === "mouse" && pts.size === 0) hideTip();
+    });
+    box.addEventListener("dblclick", () => { resetZoom(); hideTip(); });
+
+    // keyboard: arrows pan by 15% of the window, +/- zoom around its centre
+    box.tabIndex = 0;
+    box.addEventListener("keydown", e => {
+      if (!geo) return;
+      const span = geo.t1 - geo.t0, step = span * .15;
+      if (e.key === "ArrowLeft"){ e.preventDefault(); queueView(geo.t0 - step, geo.t1 - step); }
+      else if (e.key === "ArrowRight"){ e.preventDefault(); queueView(geo.t0 + step, geo.t1 + step); }
+      else if (e.key === "+" || e.key === "="){ e.preventDefault(); zoomAt(geo.t0 + span / 2, 1 / 1.3); }
+      else if (e.key === "-"){ e.preventDefault(); zoomAt(geo.t0 + span / 2, 1.3); }
+    });
+  }
+
+  /* ========================== milestones ======================== */
+  function deltaHTML(i){
+    const l = L(), t = ms(MILESTONES[i].d);
+    const bf = rankAt(t - 90*DAY), af = rankAt(t + 90*DAY), on = rankAt(t);
+    const n = v => v == null ? "—" : "#" + Math.round(v);
+    const v = Math.round(on - af), cls = v > 0 ? "up" : v < 0 ? "down" : "";
+    return `<div class="delta">
+      <span>${l.dBefore}<b>${n(bf)}</b></span>
+      <span>${l.dDay}<b>${n(on)}</b></span>
+      <span>${l.dAfter}<b>${n(af)}</b></span>
+      <span>${l.dEffect}<b class="${cls}">${v > 0 ? "▲ +" : v < 0 ? "▼ " : ""}${Math.abs(v)} ${l.sPlaces}</b></span>
+    </div>`;
+  }
+
+  function cards(){
+    const ul = $("#cards"); ul.innerHTML = "";
+    MILESTONES.forEach((j, i) => {
+      const li = document.createElement("li");
+      const b = document.createElement("button");
+      b.type = "button";
+      b.setAttribute("aria-expanded", sel === i ? "true" : "false");
+      b.innerHTML =
+        `<span class="meta"><span class="tagc">${j.tag}</span><span class="date">${fDate(ms(j.d))} · ≈ #${Math.round(rankAt(ms(j.d)))}</span></span>
+         <h3>${j.t[lang]}</h3>
+         <p class="${sel === i ? "" : "clip"}">${j.p[lang]}</p>
+         ${sel === i ? deltaHTML(i) : ""}`;
+      b.addEventListener("click", () => pick(i));
+      li.appendChild(b); ul.appendChild(li);
+    });
+  }
+
+  function pick(i){
+    sel = sel === i ? null : i;
+    cards();
+    if (sel !== null){
+      const t = ms(MILESTONES[sel].d), [a, z] = timeDomain();
+      if (t < a || t > z){ view = null; setPeriod("all"); return; }
+    }
+    draw();
+  }
+
+  function setPeriod(p){
+    period = p; view = null;
+    $("#zoomOut").classList.remove("on");
+    document.querySelectorAll("#segPeriod button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.p === p)));
+    draw();
+  }
+
+  function applyLang(){
+    const l = L();
+    document.documentElement.lang = lang;
+    store.set("alph.lang", lang);
+    $("#h2").textContent = l.h2;
+    $("#zoomOut").textContent = "⤢ " + l.reset;
+    document.querySelectorAll("#segPeriod button").forEach(b => b.textContent = ({all:l.pAll, "2y":l.p2y, "1y":l.p1y})[b.dataset.p]);
+    document.querySelectorAll("#segScale button").forEach(b => b.textContent = b.dataset.e === "lin" ? l.lin : l.log);
+    $("#segPeriod").setAttribute("aria-label", l.pAll + " / " + l.p2y + " / " + l.p1y);
+    $("#segScale").setAttribute("aria-label", l.lin + " / " + l.log);
+    document.querySelectorAll("#segLang button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.l === lang)));
+    legend(); stats(); cards(); foot(); pill(); draw();
+  }
+
+  /* ============================ wiring ========================== */
+  $("#themeBtn").addEventListener("click", () => { theme = theme === "dark" ? "light" : "dark"; applyTheme(); });
+  $("#segLang").addEventListener("click", e => {
+    const b = e.target.closest("button"); if (!b || b.dataset.l === lang) return;
+    lang = b.dataset.l; applyLang();
+  });
+  $("#segPeriod").addEventListener("click", e => { const b = e.target.closest("button"); if (b) setPeriod(b.dataset.p); });
+  $("#segScale").addEventListener("click", e => {
+    const b = e.target.closest("button"); if (!b) return;
+    scale = b.dataset.e;
+    document.querySelectorAll("#segScale button").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.e === scale)));
+    draw();
+  });
+  $("#zoomOut").addEventListener("click", resetZoom);
+  addEventListener("keydown", e => { if (e.key === "Escape" && view) resetZoom(); });
+
+  let raf;
+  addEventListener("resize", () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(draw); });
+
+  let timer = null;
+  const startPolling = () => { stopPolling(); timer = setInterval(pullLive, CONFIG.refreshMs); };
+  const stopPolling  = () => { if (timer) clearInterval(timer); timer = null; };
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) stopPolling(); else { pullLive(); startPolling(); }
+  });
+  setInterval(pill, 5000);
+
+  applyTheme(); applyLang(); bindGestures();
+  pullHistory(); pullLive(); startPolling();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(draw);
+})();
+</script>
+</body>
+</html>
