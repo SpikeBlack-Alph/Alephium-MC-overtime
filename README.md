@@ -104,7 +104,8 @@ of it and are clamped to the data range, minimum span 45 days.
 |---|---|
 | Wheel / trackpad scroll | Zoom around the cursor |
 | Two-finger pinch | Zoom around the pinch midpoint |
-| Drag (mouse or one finger) | Pan, past a 6px threshold |
+| Drag (mouse or one finger) | Pan, past a 4px threshold; scrubs instead when there is nothing to pan into |
+| Arrow keys (chart focused) | Pan 15% of the window; `+` / `-` zoom |
 | Double-click / double-tap | Reset to the period window |
 | `Esc` or **Reset zoom** | Same |
 
@@ -116,8 +117,16 @@ survives redraws, and read the current geometry from the module-level `geo`
 object that `draw()` publishes. Redraws during a gesture are coalesced to one per
 animation frame via `queueView()`.
 
-`touch-action` on the chart is `pan-y`: vertical page scrolling still works over
-the chart, while horizontal drags and pinches are handed to us.
+**`touch-action` is `none` on the chart, not `pan-y`.** With `pan-y` the browser
+arbitrates every touch: a press-and-drag that is even slightly diagonal gets
+claimed as a page scroll and we receive a `pointercancel` mid-gesture, which is
+what made horizontal panning unreliable on phones. `none` hands every touch to
+the chart. The mobile chart height was reduced (`min(430, w × 0.86)`) so there is
+page left to scroll around it.
+
+At full zoom-out the window already covers the whole dataset, so a horizontal
+drag has nowhere to go. Rather than dead-ending, the same gesture falls back to
+scrubbing the curve — the tooltip follows the finger.
 
 Below ~13 months of span, the time axis switches from years to months and the
 tooltip from month to day precision.
