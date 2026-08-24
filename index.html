@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Alephium Market Cap Ranking</title>
 <meta name="color-scheme" content="dark light">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20512%20512%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22g%22%20x1%3D%220%22%20y1%3D%221%22%20x2%3D%221%22%20y2%3D%220%22%3E%3Cstop%20offset%3D%220%22%20stop-color%3D%22%234FC3D9%22/%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%235FD6A8%22/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect%20width%3D%22512%22%20height%3D%22512%22%20rx%3D%22112%22%20fill%3D%22%230B1826%22/%3E%3Cpath%20d%3D%22M104%20320%20L172%20302%20L240%20190%20L306%20242%20L374%20222%20L408%20272%22%20fill%3D%22none%22%20stroke%3D%22url%28%23g%29%22%20stroke-width%3D%2240%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22/%3E%3Ccircle%20cx%3D%22240%22%20cy%3D%22190%22%20r%3D%2234%22%20fill%3D%22%235FD6A8%22/%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="logo-mcrank-512.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
@@ -51,10 +53,15 @@
   @media (min-width:900px){ .topbar{margin:0 -32px 34px;padding:14px 32px} }
   .topbar-in{max-width:1240px;margin:0 auto;display:flex;align-items:center;gap:8px}
   @media (min-width:700px){ .topbar-in{gap:12px} }
-  .mark{
-    font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:12px;letter-spacing:.18em;
-    border:1px solid var(--line-2);border-radius:6px;padding:5px 8px;color:var(--cyan);flex:none;
+  .brand{display:inline-flex;align-items:center;gap:9px;flex:none}
+  .logo{width:30px;height:30px;flex:none;overflow:visible}
+  @media (min-width:900px){ .logo{width:34px;height:34px} }
+  .wordmark{
+    font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:13px;letter-spacing:.20em;
+    color:var(--ink);line-height:1;
   }
+  .wordmark em{font-style:normal;color:var(--muted);font-weight:500}
+  @media (max-width:520px){ .wordmark{display:none} }
   .spacer{flex:1}
 
   .stat.flash{animation:flash 1.8s ease-out 2}
@@ -211,13 +218,28 @@
     text-transform:uppercase;color:var(--muted);opacity:.75;
   }
   .sig span{color:var(--cyan);font-weight:600}
+  .sig{display:flex;align-items:center;justify-content:center;gap:8px}
+  .sigmark{width:13px;height:13px;color:var(--cyan);opacity:.8;flex:none}
 </style>
 </head>
 <body>
 
 <div class="topbar">
   <div class="topbar-in">
-    <span class="mark">ALPH</span>
+    <span class="brand">
+      <svg class="logo" viewBox="0 0 512 512" aria-hidden="true">
+        <defs>
+          <linearGradient id="mcr" x1="0" y1="1" x2="1" y2="0">
+            <stop offset="0" style="stop-color:var(--cyan)"/>
+            <stop offset="1" style="stop-color:var(--mint)"/>
+          </linearGradient>
+        </defs>
+        <rect x="8" y="8" width="496" height="496" rx="112" fill="url(#mcr)" fill-opacity=".08" stroke="url(#mcr)" stroke-opacity=".36" stroke-width="14"/>
+        <path d="M112 316 L176 300 L240 196 L302 244 L368 226 L400 268" fill="none" stroke="url(#mcr)" stroke-width="34" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="240" cy="196" r="30" style="fill:var(--mint)"/>
+      </svg>
+      <span class="wordmark">MC<em> RANK</em></span>
+    </span>
     <span class="spacer"></span>
     <span class="pill" id="pill" data-state="loading">
       <span class="dot"></span><span class="txt" id="pillTxt">—</span>
@@ -262,7 +284,7 @@
   <ul class="cards" id="cards"></ul>
 
   <footer id="foot"></footer>
-  <p class="sig">vibecoded by <span>SpikeBlack</span></p>
+  <p class="sig"><svg class="sigmark" viewBox="0 0 32 32" aria-hidden="true"><g stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" fill="none"><path d="M4 21 9 19.5 14 12 19 15.5 24 13.5 28 18"/></g></svg>vibecoded by <span>SpikeBlack</span></p>
 </div>
 
 <script>
