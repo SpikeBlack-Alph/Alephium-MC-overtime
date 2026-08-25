@@ -131,6 +131,18 @@ scrubbing the curve — the tooltip follows the finger.
 Below ~13 months of span, the time axis switches from years to months and the
 tooltip from month to day precision.
 
+## Design system
+
+All spacing derives from a 4px scale, radii from three tokens (`--r-s` 10px,
+`--r-m` 14px, `--r-l` 20px), motion from a single `--t` easing token. Only the
+chart panel carries elevation (`--elev` + `--edge` inner highlight); stats and
+milestone cards are border-only, so the hierarchy reads at a glance.
+
+The chart legend lives in the panel header (hidden below 760px) and the
+interaction hint sits under the chart, which removed a full-width strip and one
+level of nesting. Active milestone cards use a 3px inset accent rather than a
+full amber border.
+
 ## Theming and i18n
 
 - Theme: `data-theme="dark|light"` on `<html>`; all colours are CSS custom
