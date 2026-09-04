@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-label="MC Rank">
+  <defs>
+    <linearGradient id="mcr" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0" stop-color="#4FC3D9"/>
+      <stop offset="1" stop-color="#5FD6A8"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="512" height="512" rx="116" fill="#0B1826"/>
+  <rect x="20" y="20" width="472" height="472" rx="98" fill="url(#mcr)" fill-opacity=".07" stroke="url(#mcr)" stroke-opacity=".34" stroke-width="4"/>
+
+  <path d="M96 282 L156 268 L216 184 L272 222 L332 208 L396 276"
+        fill="none" stroke="url(#mcr)" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="216" cy="184" r="19" fill="#5FD6A8"/>
+
+  <text x="249" y="366" text-anchor="middle"
+        font-family="IBM Plex Mono, ui-monospace, DejaVu Sans Mono, monospace"
+        font-size="62" font-weight="600" letter-spacing="13" fill="#E8F0F6">MC RANK</text>
+</svg>
